@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MG M2 STOCK COMMAND DASHBOARD (2026)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #060913;
+      --bg-card: rgba(13, 20, 38, 0.88);
+      --bg-card-hover: rgba(20, 31, 58, 0.95);
+      --border-glow: rgba(0, 229, 255, 0.28);
+      --cyan: #00e5ff;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --pink: #ec4899;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 15% 15%, rgba(0, 229, 255, 0.12), transparent 35%),
+        radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.14), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(59, 130, 246, 0.1), transparent 45%),
+        var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      border-radius: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #e9d5ff;
+      font-size: 0.82rem;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 14px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--cyan);
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+    }
+
+    .kpi-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 6px 0 2px;
+      color: #fff;
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--cyan);
+    }
+
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input, .select, .btn {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(6, 9, 19, 0.85);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .input:focus, .select:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+    }
+
+    .btn {
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(168, 85, 247, 0.25));
+      border-color: var(--cyan);
+      font-weight: 600;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(168, 85, 247, 0.4));
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #f8fafc;
+    }
+
+    .panel-title span.tag {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(0, 229, 255, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--cyan);
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(0, 229, 255, 0.25);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .vin-code {
+      font-family: monospace;
+      color: #bae6fd;
+      font-size: 0.82rem;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .pill-free {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .pill-wait {
+      background: rgba(0, 229, 255, 0.15);
+      color: #67e8f9;
+      border: 1px solid rgba(0, 229, 255, 0.35);
+    }
+
+    .pill-done {
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .days-high {
+      color: #fb7185;
+      font-weight: 600;
+    }
+
+    .days-mid {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .days-low {
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <h1>MG M2 STOCK COMMAND DASHBOARD</h1>
+        <p id="updateInfo">สรุปข้อมูลรถสต็อกในระบบ MG • อัปเดต 18-11-2026 • โชว์รูม MG M2</p>
+      </div>
+      <div class="badge-live">
+        <span class="dot"></span>
+        <span id="sourceLabel">STATIC SNAPSHOT (31 UNITS)</span>
+      </div>
+    </header>
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">รถทั้งหมดในสต็อก (TOTAL)</div>
+        <div class="kpi-value" id="kpiTotal">0</div>
+        <div class="kpi-sub" id="kpiZoneSplit">ตารางบน 0 | ตารางล่าง 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ยังไม่มีจอง (AVAILABLE)</div>
+        <div class="kpi-value" id="kpiAvailable" style="color:#fcd34d;">0</div>
+        <div class="kpi-sub">พร้อมดันแคมเปญ / โชว์ / ขาย</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">รอส่งมอบ / อนุมัติแล้ว</div>
+        <div class="kpi-value" id="kpiWaiting" style="color:#67e8f9;">0</div>
+        <div class="kpi-sub">ไฟแนนซ์อนุมัติแล้ว / เงินสด รอส่งมอบ</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ส่งมอบแล้ว (DELIVERED)</div>
+        <div class="kpi-value" id="kpiDelivered" style="color:#6ee7b7;">0</div>
+        <div class="kpi-sub">ตัดขาย / ส่งมอบเรียบร้อย</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">อายุสต็อกเฉลี่ย (AVG DAYS)</div>
+        <div class="kpi-value" id="kpiAvgDays" style="color:#d8b4fe;">0</div>
+        <div class="kpi-sub" id="kpiMaxDays">สูงสุด 0 วัน</div>
+      </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <section class="controls">
+      <input type="text" id="searchInput" class="input" placeholder="ค้นหา VIN, รุ่นรถ, สี, ผู้ดูแล หรือหมายเหตุ..." />
+      <select id="zoneFilter" class="select">
+        <option value="ALL">ทุกตาราง (บน + ล่าง)</option>
+        <option value="TOP">ตารางบน (สต็อกเก่า 2022–2024)</option>
+        <option value="BOTTOM">ตารางล่าง (รับเข้า 2024–11/2026)</option>
+      </select>
+      <select id="statusFilter" class="select">
+        <option value="ALL">ทุกสถานะ</option>
+        <option value="ยังไม่มีจอง">ยังไม่มีจอง</option>
+        <option value="ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ">ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ</option>
+        <option value="ส่งมอบแล้ว">ส่งมอบแล้ว</option>
+      </select>
+      <button class="btn" id="resetBtn">รีเซ็ตตัวกรอง</button>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-grid">
+      <div class="panel">
+        <div class="panel-title">สัดส่วนสถานะรถในสต็อก <span class="tag">STATUS</span></div>
+        <canvas id="statusChart" height="220"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">จำนวนรถแยกตามรุ่นหลัก <span class="tag">MODEL</span></div>
+        <canvas id="modelChart" height="220"></canvas>
+      </div>
+    </section>
+
+    <!-- Data Table -->
+    <section class="panel">
+      <div class="panel-title">
+        <span>รายการรถในระบบสต็อก</span>
+        <span class="tag" id="rowCountLabel">แสดง 0 คัน</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>กลุ่ม</th>
+              <th>ลำดับ</th>
+              <th>VIN</th>
+              <th>รุ่น / ราคา</th>
+              <th>รุ่นย่อย</th>
+              <th>สี</th>
+              <th>วันรับเข้า</th>
+              <th>จำนวนวัน</th>
+              <th>สถานะ</th>
+              <th>ผู้ดูแล / หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ข้อมูลสรุปจากไฟล์ stock m2 2026.xlsx (อัปเดต 18-11-2026)
+    const INITIAL_DATA = [
+      // ตารางบน (8 คัน)
+      { zone: "TOP", no: 1, vin: "MMLA36E46NG022812", model: "MG5(629,000)", trim: "D+", color: "Red", entryDate: "2022-05-31", days: 1634, status: "ยังไม่มีจอง", note: "คีย์2022 | ติดฟิลม์แล้ว" },
+      { zone: "TOP", no: 2, vin: "MMLA36E68NG042240", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-06-07", days: 1262, status: "ส่งมอบแล้ว", note: "คีย์2023 | ติดฟิลม์แล้ว" },
+      { zone: "TOP", no: 3, vin: "MMLA36E49NG034209", model: "MG5(629,000)", trim: "D+", color: "Yellow", entryDate: "2022-11-02", days: 1479, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
+      { zone: "TOP", no: 4, vin: "LSJWH4093PN273650", model: "MG4 ELECTRIC (969,000)", trim: "X", color: "Black", entryDate: "2024-02-02", days: 1022, status: "ยังไม่มีจอง", note: "คีย์2024 | ขาย 709,000 นำเข้า" },
+      { zone: "TOP", no: 5, vin: "MMLWH496XRG012362", model: "MG4 ELECTRIC(2024) (809,900)", trim: "X", color: "Grey/Black", entryDate: "2024-04-08", days: 956, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
+      { zone: "TOP", no: 6, vin: "MMLA36E60PG018923", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2024" },
+      { zone: "TOP", no: 7, vin: "MMLWH4968RG021755", model: "MG4 ELECTRIC (MY24) (809,900)", trim: "X", color: "Black", entryDate: "2024-08-31", days: 811, status: "ยังไม่มีจอง", note: "คีย์2024" },
+      { zone: "TOP", no: 8, vin: "MMLA36E42NG035301", model: "MG5 (629,000)", trim: "D+", color: "Red", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2025" },
+
+      // ตารางล่าง (23 คัน)
+      { zone: "BOTTOM", no: 1, vin: "MMLWP456XRG029042", model: "MG3 HYBRID+ (579,900) 499,000", trim: "D", color: "White", entryDate: "2024-11-22", days: 728, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 2, vin: "MMLW74E3XPG021963", model: "MG ZS (649,000) 549,000", trim: "X", color: "Black", entryDate: "2026-05-11", days: 193, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 3, vin: "MMLA36E48RG022459", model: "MG5 2024 (629,900) 579,900", trim: "D", color: "White", entryDate: "2026-06-13", days: 160, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 4, vin: "MMLWS4966TG019723", model: "MG S5 EV (759,900)", trim: "X+", color: "Grey", entryDate: "2026-07-21", days: 122, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 5, vin: "LSJWT4098TS037246", model: "MG IM5", trim: "LR", color: "Grey", entryDate: "2026-07-28", days: 115, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 6, vin: "MMLWS4963TG022451", model: "MG S5EV (849,900)", trim: "V+", color: "White", entryDate: "2026-09-03", days: 78, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 7, vin: "MMLEB494XTG023283", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-09-03", days: 78, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { zone: "BOTTOM", no: 8, vin: "MMLEB49AXTG025377", model: "MG URBAN (729,900)", trim: "ULTRA", color: "Grey", entryDate: "2026-09-09", days: 72, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 9, vin: "MMLWS4962TG022781", model: "MG S5EV (759,900)", trim: "X+", color: "Black", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 10, vin: "MMLWS4960TG025002", model: "MG S5EV (649,900)", trim: "D+", color: "TITANIUM", entryDate: "2026-10-06", days: 45, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ปูนิ่ม" },
+      { zone: "BOTTOM", no: 11, vin: "MMLWS4960TG027333", model: "MG S5EV (649,900)", trim: "D+", color: "White", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 12, vin: "MMLEB49A6TG030950", model: "MG URBAN (619,900)", trim: "MAX", color: "Grey", entryDate: "2026-10-22", days: 29, status: "ส่งมอบแล้ว", note: "นัดส่ง 15-11-69 | พี่เบิร์ท | ตัดขายแล้ว" },
+      { zone: "BOTTOM", no: 13, vin: "MMLWH4967TG024878", model: "MG4 ELECTRIC (709,900)", trim: "X", color: "Black", entryDate: "2026-10-23", days: 28, status: "ยังไม่มีจอง", note: "Display" },
+      { zone: "BOTTOM", no: 14, vin: "MMLEB49A4TG025892", model: "MG URBAN (619,900)", trim: "MAX", color: "PURPLE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 15, vin: "MMLEB49A7TG030035", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 16, vin: "MMLEB49A9TG030070", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 17, vin: "MMLEB49A8TG029959", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
+      { zone: "BOTTOM", no: 18, vin: "LSJWT4094TS038295", model: "MG IM5", trim: "LR", color: "BEIGE", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { zone: "BOTTOM", no: 19, vin: "MMLEB4948TG029499", model: "MG URBAN (549,900)", trim: "STANDARD", color: "GREY", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "ดรีม" },
+      { zone: "BOTTOM", no: 20, vin: "MMLEB4943TG029376", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { zone: "BOTTOM", no: 21, vin: "MMLEB49A3TG033403", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
+      { zone: "BOTTOM", no: 22, vin: "MMLEB49A2TG034803", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
+      { zone: "BOTTOM", no: 23, vin: "เคส EPDI รอรับเข้า", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ยังไม่มีจอง", note: "Display" }
+    ];
+
+    // หากต้องการดึงข้อมูลสดจาก Google Apps Script Web App ให้ใส่ URL ด้านล่างนี้
+    const APPS_SCRIPT_URL = "";
+
+    let stockData = [...INITIAL_DATA];
+    let statusChart, modelChart;
+
+    function normalizeModelGroup(modelStr = "") {
+      const m = modelStr.toUpperCase();
+      if (m.includes("URBAN")) return "MG URBAN";
+      if (m.includes("S5")) return "MG S5 EV";
+      if (m.includes("MG4")) return "MG4 EV";
+      if (m.includes("MG5") || m.includes("MG 5")) return "MG5";
+      if (m.includes("IM5")) return "MG IM5";
+      if (m.includes("MG3")) return "MG3 HYBRID+";
+      if (m.includes("ZS")) return "MG ZS";
+      return modelStr.split("(")[0].trim();
+    }
+
+    function statusBadge(status) {
+      if (status.includes("ส่งมอบแล้ว")) {
+        return `<span class="pill pill-done">${status}</span>`;
+      }
+      if (status.includes("รอส่งมอบ") || status.includes("อนุมัติ")) {
+        return `<span class="pill pill-wait">${status}</span>`;
+      }
+      return `<span class="pill pill-free">${status}</span>`;
+    }
+
+    function daysClass(d) {
+      if (d >= 365) return "days-high";
+      if (d >= 60) return "days-mid";
+      return "days-low";
+    }
+
+    function getFilteredData() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const zone = document.getElementById("zoneFilter").value;
+      const status = document.getElementById("statusFilter").value;
+
+      return stockData.filter(item => {
+        const matchZone = zone === "ALL" || item.zone === zone;
+        const matchStatus = status === "ALL" || item.status === status;
+        const hay = `${item.vin} ${item.model} ${item.trim} ${item.color} ${item.note} ${item.status}`.toLowerCase();
+        const matchQ = !q || hay.includes(q);
+        return matchZone && matchStatus && matchQ;
+      });
+    }
+
+    function renderKPIs(rows) {
+      const topCount = stockData.filter(r => r.zone === "TOP").length;
+      const bottomCount = stockData.filter(r => r.zone === "BOTTOM").length;
+
+      const available = rows.filter(r => r.status === "ยังไม่มีจอง").length;
+      const waiting = rows.filter(r => r.status.includes("รอส่งมอบ") || r.status.includes("อนุมัติ")).length;
+      const delivered = rows.filter(r => r.status.includes("ส่งมอบแล้ว")).length;
+
+      const daysArr = rows.map(r => Number(r.days) || 0);
+      const avgDays = daysArr.length ? Math.round(daysArr.reduce((a, b) => a + b, 0) / daysArr.length) : 0;
+      const maxDays = daysArr.length ? Math.max(...daysArr) : 0;
+
+      document.getElementById("kpiTotal").textContent = rows.length;
+      document.getElementById("kpiZoneSplit").textContent = `ทั้งหมด: ตารางบน ${topCount} | ตารางล่าง ${bottomCount}`;
+      document.getElementById("kpiAvailable").textContent = available;
+      document.getElementById("kpiWaiting").textContent = waiting;
+      document.getElementById("kpiDelivered").textContent = delivered;
+      document.getElementById("kpiAvgDays").textContent = `${avgDays} วัน`;
+      document.getElementById("kpiMaxDays").textContent = `สูงสุด ${maxDays} วัน`;
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById("stockTableBody");
+      document.getElementById("rowCountLabel").textContent = `แสดง ${rows.length} คัน`;
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:24px; color:#94a3b8;">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.zone === "TOP" ? '<span class="pill" style="background:rgba(168,85,247,0.16);color:#e9d5ff;border:1px solid rgba(168,85,247,0.4);">ตารางบน</span>' : '<span class="pill" style="background:rgba(59,130,246,0.16);color:#93c5fd;border:1px solid rgba(59,130,246,0.4);">ตารางล่าง</span>'}</td>
+          <td>${r.no}</td>
+          <td class="vin-code">${r.vin}</td>
+          <td><strong>${r.model}</strong></td>
+          <td>${r.trim || "-"}</td>
+          <td>${r.color || "-"}</td>
+          <td>${r.entryDate || "-"}</td>
+          <td class="${daysClass(Number(r.days) || 0)}">${r.days} วัน</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>${r.note || "-"}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderCharts(rows) {
+      // Status Chart
+      const statusCounts = {};
+      rows.forEach(r => {
+        statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+      });
+
+      const statusLabels = Object.keys(statusCounts);
+      const statusValues = Object.values(statusCounts);
+
+      if (statusChart) statusChart.destroy();
+      statusChart = new Chart(document.getElementById("statusChart"), {
+        type: "doughnut",
+        data: {
+          labels: statusLabels,
+          datasets: [{
+            data: statusValues,
+            backgroundColor: ["#f59e0b", "#00e5ff", "#10b981", "#a855f7"],
+            borderColor: "#060913",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#cbd5e1", font: { family: "Prompt" } }
+            }
+          }
+        }
+      });
+
+      // Model Chart
+      const modelCounts = {};
+      rows.forEach(r => {
+        const g = normalizeModelGroup(r.model);
+        modelCounts[g] = (modelCounts[g] || 0) + 1;
+      });
+
+      const sortedModels = Object.entries(modelCounts).sort((a, b) => b[1] - a[1]);
+
+      if (modelChart) modelChart.destroy();
+      modelChart = new Chart(document.getElementById("modelChart"), {
+        type: "bar",
+        data: {
+          labels: sortedModels.map(x => x[0]),
+          datasets: [{
+            label: "จำนวนคัน",
+            data: sortedModels.map(x => x[1]),
+            backgroundColor: "rgba(0, 229, 255, 0.55)",
+            borderColor: "#00e5ff",
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { ticks: { color: "#cbd5e1", font: { family: "Prompt" } }, grid: { color: "rgba(148,163,184,0.1)" } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: "#cbd5e1" }, grid: { color: "rgba(148,163,184,0.1)" } }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function updateDashboard() {
+      const filtered = getFilteredData();
+      renderKPIs(filtered);
+      renderTable(filtered);
+      renderCharts(filtered);
+    }
+
+    async function loadFromAppsScriptIfConfigured() {
+      if (!APPS_SCRIPT_URL) return;
+      try {
+        const res = await fetch(APPS_SCRIPT_URL);
+        const json = await res.json();
+        if (json && Array.isArray(json.items) && json.items.length) {
+          stockData = json.items;
+          document.getElementById("sourceLabel").textContent = "LIVE GOOGLE SHEETS";
+          if (json.updatedText) {
+            document.getElementById("updateInfo").textContent = `${json.updatedText} • โชว์รูม MG M2`;
+          }
+          updateDashboard();
+        }
+      } catch (err) {
+        console.warn("ใช้ข้อมูล Snapshot สำรอง:", err);
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", updateDashboard);
+    document.getElementById("zoneFilter").addEventListener("change", updateDashboard);
+    document.getElementById("statusFilter").addEventListener("change", updateDashboard);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("zoneFilter").value = "ALL";
+      document.getElementById("statusFilter").value = "ALL";
+      updateDashboard();
+    });
+
+    updateDashboard();
+    loadFromAppsScriptIfConfigured();
+  </script>
+</body>
+</html>
