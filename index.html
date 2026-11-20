@@ -352,7 +352,7 @@
     <header class="header">
       <div class="brand">
         <h1>MG M2 STOCK COMMAND DASHBOARD</h1>
-        <p id="updateInfo">สรุปข้อมูลรถสต็อกในระบบ MG • อัปเดต 18-11-2026 • โชว์รูม MG M2</p>
+        <p id="updateInfo">สรุปข้อมูลรถสต็อกในระบบ MG • โชว์รูม MG M2</p>
       </div>
       <div class="header-actions">
         <div class="badge-live" id="statusBadge">
@@ -437,59 +437,31 @@
               <th>ผู้ดูแล / หมายเหตุ</th>
             </tr>
           </thead>
-          <tbody id="stockTableBody"></tbody>
+          <tbody id="stockTableBody">
+            <tr>
+              <td colspan="9" style="text-align:center; padding:24px; color:#94a3b8;">
+                กำลังดึงข้อมูลจาก Google Sheets...
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </section>
   </div>
 
   <script>
-    const INITIAL_DATA = [
-      { no: 1, vin: "MMLA36E46NG022812", model: "MG5(629,000)", trim: "D+", color: "Red", entryDate: "2022-05-31", days: 1634, status: "ยังไม่มีจอง", note: "คีย์2022 | ติดฟิลม์แล้ว" },
-      { no: 2, vin: "MMLA36E68NG042240", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-06-07", days: 1262, status: "ส่งมอบแล้ว", note: "คีย์2023 | ติดฟิลม์แล้ว" },
-      { no: 3, vin: "MMLA36E49NG034209", model: "MG5(629,000)", trim: "D+", color: "Yellow", entryDate: "2022-11-02", days: 1479, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
-      { no: 4, vin: "LSJWH4093PN273650", model: "MG4 ELECTRIC (969,000)", trim: "X", color: "Black", entryDate: "2024-02-02", days: 1022, status: "ยังไม่มีจอง", note: "คีย์2024 | ขาย 709,000 นำเข้า" },
-      { no: 5, vin: "MMLWH496XRG012362", model: "MG4 ELECTRIC(2024) (809,900)", trim: "X", color: "Grey/Black", entryDate: "2024-04-08", days: 956, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
-      { no: 6, vin: "MMLA36E60PG018923", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2024" },
-      { no: 7, vin: "MMLWH4968RG021755", model: "MG4 ELECTRIC (MY24) (809,900)", trim: "X", color: "Black", entryDate: "2024-08-31", days: 811, status: "ยังไม่มีจอง", note: "คีย์2024" },
-      { no: 8, vin: "MMLA36E42NG035301", model: "MG5 (629,000)", trim: "D+", color: "Red", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2025" },
-      { no: 9, vin: "MMLWP456XRG029042", model: "MG3 HYBRID+ (579,900) 499,000", trim: "D", color: "White", entryDate: "2024-11-22", days: 728, status: "ยังไม่มีจอง", note: "-" },
-      { no: 10, vin: "MMLW74E3XPG021963", model: "MG ZS (649,000) 549,000", trim: "X", color: "Black", entryDate: "2026-05-11", days: 193, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 11, vin: "MMLA36E48RG022459", model: "MG5 2024 (629,900) 579,900", trim: "D", color: "White", entryDate: "2026-06-13", days: 160, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 12, vin: "MMLWS4966TG019723", model: "MG S5 EV (759,900)", trim: "X+", color: "Grey", entryDate: "2026-07-21", days: 122, status: "ยังไม่มีจอง", note: "-" },
-      { no: 13, vin: "LSJWT4098TS037246", model: "MG IM5", trim: "LR", color: "Grey", entryDate: "2026-07-28", days: 115, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 14, vin: "MMLWS4963TG022451", model: "MG S5EV (849,900)", trim: "V+", color: "White", entryDate: "2026-09-03", days: 78, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 15, vin: "MMLEB494XTG023283", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-09-03", days: 78, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { no: 16, vin: "MMLEB49AXTG025377", model: "MG URBAN (729,900)", trim: "ULTRA", color: "Grey", entryDate: "2026-09-09", days: 72, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 17, vin: "MMLWS4962TG022781", model: "MG S5EV (759,900)", trim: "X+", color: "Black", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
-      { no: 18, vin: "MMLWS4960TG025002", model: "MG S5EV (649,900)", trim: "D+", color: "TITANIUM", entryDate: "2026-10-06", days: 45, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ปูนิ่ม" },
-      { no: 19, vin: "MMLWS4960TG027333", model: "MG S5EV (649,900)", trim: "D+", color: "White", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
-      { no: 20, vin: "MMLEB49A6TG030950", model: "MG URBAN (619,900)", trim: "MAX", color: "Grey", entryDate: "2026-10-22", days: 29, status: "ส่งมอบแล้ว", note: "นัดส่ง 15-11-69 | พี่เบิร์ท | ตัดขายแล้ว" },
-      { no: 21, vin: "MMLWH4967TG024878", model: "MG4 ELECTRIC (709,900)", trim: "X", color: "Black", entryDate: "2026-10-23", days: 28, status: "ยังไม่มีจอง", note: "Display" },
-      { no: 22, vin: "MMLEB49A4TG025892", model: "MG URBAN (619,900)", trim: "MAX", color: "PURPLE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
-      { no: 23, vin: "MMLEB49A7TG030035", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
-      { no: 24, vin: "MMLEB49A9TG030070", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
-      { no: 25, vin: "MMLEB49A8TG029959", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
-      { no: 26, vin: "LSJWT4094TS038295", model: "MG IM5", trim: "LR", color: "BEIGE", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { no: 27, vin: "MMLEB4948TG029499", model: "MG URBAN (549,900)", trim: "STANDARD", color: "GREY", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "ดรีม" },
-      { no: 28, vin: "MMLEB4943TG029376", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { no: 29, vin: "MMLEB49A3TG033403", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
-      { no: 30, vin: "MMLEB49A2TG034803", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
-      { no: 31, vin: "เคส EPDI รอรับเข้า", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ยังไม่มีจอง", note: "Display" }
-    ];
-
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN9Ii_RczxUVCtWT-6DNaEav-md9TTrvrobz8Agea_c3lvCOfNGsMOA-AZMRixQTClPA/exec";
     const AUTO_SYNC_INTERVAL_MS = 60000;
-    const HIDE_ZERO_DAYS = true; // ซ่อนรายการที่มีจำนวนวันเป็น 0
+    const HIDE_ZERO_DAYS = true;
 
-    let stockData = [...INITIAL_DATA];
+    let stockData = [];
+    let isLoading = true;
     let statusChart, modelChart;
 
     function sanitizeStockItems(items) {
       return items
-        .map((r, idx) => ({
+        .map((r) => ({
           ...r,
-          no: idx + 1,
           vin: String(r.vin || "").trim(),
           model: String(r.model || "").trim(),
           trim: String(r.trim || "").trim(),
@@ -499,7 +471,7 @@
           status: String(r.status || "ยังไม่มีจอง").trim(),
           note: String(r.note || "-").trim()
         }))
-        .filter(r => {
+        .filter((r) => {
           if (!r.vin && !r.model) return false;
           if (HIDE_ZERO_DAYS && r.days <= 0) return false;
           return true;
@@ -539,7 +511,7 @@
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
       const status = document.getElementById("statusFilter").value;
 
-      return stockData.filter(item => {
+      return stockData.filter((item) => {
         const matchStatus = status === "ALL" || item.status === status;
         const hay = `${item.vin} ${item.model} ${item.trim} ${item.color} ${item.note} ${item.status}`.toLowerCase();
         const matchQ = !q || hay.includes(q);
@@ -548,11 +520,11 @@
     }
 
     function renderKPIs(rows) {
-      const available = rows.filter(r => r.status === "ยังไม่มีจอง").length;
-      const waiting = rows.filter(r => r.status.includes("รอส่งมอบ") || r.status.includes("อนุมัติ")).length;
-      const delivered = rows.filter(r => r.status.includes("ส่งมอบแล้ว")).length;
+      const available = rows.filter((r) => r.status === "ยังไม่มีจอง").length;
+      const waiting = rows.filter((r) => r.status.includes("รอส่งมอบ") || r.status.includes("อนุมัติ")).length;
+      const delivered = rows.filter((r) => r.status.includes("ส่งมอบแล้ว")).length;
 
-      const daysArr = rows.map(r => Number(r.days) || 0);
+      const daysArr = rows.map((r) => Number(r.days) || 0);
       const avgDays = daysArr.length ? Math.round(daysArr.reduce((a, b) => a + b, 0) / daysArr.length) : 0;
       const maxDays = daysArr.length ? Math.max(...daysArr) : 0;
 
@@ -569,12 +541,22 @@
       const tbody = document.getElementById("stockTableBody");
       document.getElementById("rowCountLabel").textContent = `แสดง ${rows.length} คัน`;
 
-      if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:24px; color:#94a3b8;">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
+      if (isLoading && !stockData.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:24px; color:#94a3b8;">กำลังดึงข้อมูลจาก Google Sheets...</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = rows.map(r => `
+      if (!rows.length) {
+        const msg = stockData.length
+          ? "ไม่พบข้อมูลตามเงื่อนไขที่เลือก"
+          : "ยังไม่มีข้อมูลจาก Google Sheets หรือไม่สามารถเชื่อมต่อ Web App ได้";
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:24px; color:#94a3b8;">${msg}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows
+        .map(
+          (r) => `
         <tr>
           <td>${r.no}</td>
           <td class="vin-code">${r.vin || "-"}</td>
@@ -586,12 +568,14 @@
           <td>${statusBadge(r.status)}</td>
           <td>${r.note || "-"}</td>
         </tr>
-      `).join("");
+      `
+        )
+        .join("");
     }
 
     function renderCharts(rows) {
       const statusCounts = {};
-      rows.forEach(r => {
+      rows.forEach((r) => {
         statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
       });
 
@@ -603,12 +587,14 @@
         type: "doughnut",
         data: {
           labels: statusLabels,
-          datasets: [{
-            data: statusValues,
-            backgroundColor: ["#f59e0b", "#00e5ff", "#10b981", "#a855f7"],
-            borderColor: "#060913",
-            borderWidth: 2
-          }]
+          datasets: [
+            {
+              data: statusValues,
+              backgroundColor: ["#f59e0b", "#00e5ff", "#10b981", "#a855f7"],
+              borderColor: "#060913",
+              borderWidth: 2
+            }
+          ]
         },
         options: {
           responsive: true,
@@ -622,7 +608,7 @@
       });
 
       const modelCounts = {};
-      rows.forEach(r => {
+      rows.forEach((r) => {
         const g = normalizeModelGroup(r.model);
         modelCounts[g] = (modelCounts[g] || 0) + 1;
       });
@@ -633,15 +619,17 @@
       modelChart = new Chart(document.getElementById("modelChart"), {
         type: "bar",
         data: {
-          labels: sortedModels.map(x => x[0]),
-          datasets: [{
-            label: "จำนวนคัน",
-            data: sortedModels.map(x => x[1]),
-            backgroundColor: "rgba(0, 229, 255, 0.55)",
-            borderColor: "#00e5ff",
-            borderWidth: 1.5,
-            borderRadius: 6
-          }]
+          labels: sortedModels.map((x) => x[0]),
+          datasets: [
+            {
+              label: "จำนวนคัน",
+              data: sortedModels.map((x) => x[1]),
+              backgroundColor: "rgba(0, 229, 255, 0.55)",
+              borderColor: "#00e5ff",
+              borderWidth: 1.5,
+              borderRadius: 6
+            }
+          ]
         },
         options: {
           responsive: true,
@@ -663,13 +651,17 @@
       renderCharts(filtered);
     }
 
-    async function loadFromAppsScriptIfConfigured(isManual = false) {
+    async function loadFromAppsScript(isManual = false) {
       const badge = document.getElementById("statusBadge");
       const label = document.getElementById("sourceLabel");
       const btn = document.getElementById("syncNowBtn");
 
       if (!APPS_SCRIPT_URL) {
-        label.textContent = `STATIC SNAPSHOT (${stockData.length} UNITS)`;
+        isLoading = false;
+        badge.classList.remove("connected");
+        badge.classList.add("error");
+        label.textContent = "ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL";
+        updateDashboard();
         return;
       }
 
@@ -681,9 +673,14 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
 
-        if (json && Array.isArray(json.items) && json.items.length) {
+        if (json && Array.isArray(json.items)) {
           stockData = sanitizeStockItems(json.items);
-          const nowTime = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          isLoading = false;
+          const nowTime = new Date().toLocaleTimeString("th-TH", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
           badge.classList.remove("error");
           badge.classList.add("connected");
           label.textContent = `LIVE SHEETS (${stockData.length} คัน • ซิงก์ ${nowTime})`;
@@ -697,11 +694,13 @@
         }
       } catch (err) {
         console.error("ซิงก์ข้อมูลสดไม่สำเร็จ:", err);
+        isLoading = false;
         badge.classList.remove("connected");
         badge.classList.add("error");
-        label.textContent = "ซิงก์ไม่สำเร็จ (ใช้ข้อมูลสำรอง)";
+        label.textContent = "ซิงก์ไม่สำเร็จ";
+        updateDashboard();
         if (isManual) {
-          alert("ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ กรุณาตรวจสอบสิทธิ์การเข้าถึง Web App");
+          alert("ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ กรุณาตรวจสอบว่า Deploy Web App และตั้งค่า Who has access เป็น Anyone แล้วหรือยัง");
         }
       } finally {
         btn.disabled = false;
@@ -711,17 +710,16 @@
 
     document.getElementById("searchInput").addEventListener("input", updateDashboard);
     document.getElementById("statusFilter").addEventListener("change", updateDashboard);
-    document.getElementById("syncNowBtn").addEventListener("click", () => loadFromAppsScriptIfConfigured(true));
+    document.getElementById("syncNowBtn").addEventListener("click", () => loadFromAppsScript(true));
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("searchInput").value = "";
       document.getElementById("statusFilter").value = "ALL";
       updateDashboard();
     });
 
-    stockData = sanitizeStockItems(INITIAL_DATA);
     updateDashboard();
-    loadFromAppsScriptIfConfigured();
-    setInterval(() => loadFromAppsScriptIfConfigured(false), AUTO_SYNC_INTERVAL_MS);
+    loadFromAppsScript(false);
+    setInterval(() => loadFromAppsScript(false), AUTO_SYNC_INTERVAL_MS);
   </script>
 </body>
 </html>
