@@ -76,6 +76,13 @@
       margin-top: 4px;
     }
 
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
     .badge-live {
       display: inline-flex;
       align-items: center;
@@ -88,12 +95,34 @@
       font-size: 0.82rem;
     }
 
+    .badge-live.connected {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+
+    .badge-live.error {
+      background: rgba(244, 63, 94, 0.16);
+      border-color: rgba(244, 63, 94, 0.45);
+      color: #fda4af;
+    }
+
     .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       background: var(--cyan);
       box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .badge-live.connected .dot {
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+    }
+
+    .badge-live.error .dot {
+      background: var(--rose);
+      box-shadow: 0 0 10px var(--rose);
     }
 
     /* KPI Grid */
@@ -185,6 +214,12 @@
 
     .btn:hover {
       background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(168, 85, 247, 0.4));
+    }
+
+    .btn-sm {
+      width: auto;
+      padding: 8px 14px;
+      font-size: 0.82rem;
     }
 
     /* Charts Grid */
@@ -319,9 +354,12 @@
         <h1>MG M2 STOCK COMMAND DASHBOARD</h1>
         <p id="updateInfo">สรุปข้อมูลรถสต็อกในระบบ MG • อัปเดต 18-11-2026 • โชว์รูม MG M2</p>
       </div>
-      <div class="badge-live">
-        <span class="dot"></span>
-        <span id="sourceLabel">STATIC SNAPSHOT (31 UNITS)</span>
+      <div class="header-actions">
+        <div class="badge-live" id="statusBadge">
+          <span class="dot"></span>
+          <span id="sourceLabel">กำลังเชื่อมต่อ Google Sheets...</span>
+        </div>
+        <button class="btn btn-sm" id="syncNowBtn">🔄 ซิงก์ข้อมูลสด</button>
       </div>
     </header>
 
@@ -412,7 +450,6 @@
   </div>
 
   <script>
-    // ข้อมูลสรุปจากไฟล์ stock m2 2026.xlsx (อัปเดต 18-11-2026)
     const INITIAL_DATA = [
       // ตารางบน (8 คัน)
       { zone: "TOP", no: 1, vin: "MMLA36E46NG022812", model: "MG5(629,000)", trim: "D+", color: "Red", entryDate: "2022-05-31", days: 1634, status: "ยังไม่มีจอง", note: "คีย์2022 | ติดฟิลม์แล้ว" },
@@ -450,8 +487,8 @@
       { zone: "BOTTOM", no: 23, vin: "เคส EPDI รอรับเข้า", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ยังไม่มีจอง", note: "Display" }
     ];
 
-    // หากต้องการดึงข้อมูลสดจาก Google Apps Script Web App ให้ใส่ URL ด้านล่างนี้
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN9Ii_RczxUVCtWT-6DNaEav-md9TTrvrobz8Agea_c3lvCOfNGsMOA-AZMRixQTClPA/exec";
+    const AUTO_SYNC_INTERVAL_MS = 60000; // ดึงข้อมูลสดอัตโนมัติทุก 60 วินาที
 
     let stockData = [...INITIAL_DATA];
     let statusChart, modelChart;
@@ -545,7 +582,6 @@
     }
 
     function renderCharts(rows) {
-      // Status Chart
       const statusCounts = {};
       rows.forEach(r => {
         statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
@@ -577,7 +613,6 @@
         }
       });
 
-      // Model Chart
       const modelCounts = {};
       rows.forEach(r => {
         const g = normalizeModelGroup(r.model);
@@ -620,27 +655,56 @@
       renderCharts(filtered);
     }
 
-    async function loadFromAppsScriptIfConfigured() {
-      if (!APPS_SCRIPT_URL) return;
+    async function loadFromAppsScriptIfConfigured(isManual = false) {
+      const badge = document.getElementById("statusBadge");
+      const label = document.getElementById("sourceLabel");
+      const btn = document.getElementById("syncNowBtn");
+
+      if (!APPS_SCRIPT_URL) {
+        label.textContent = "STATIC SNAPSHOT (31 UNITS)";
+        return;
+      }
+
       try {
-        const res = await fetch(APPS_SCRIPT_URL);
+        btn.disabled = true;
+        btn.textContent = "⏳ กำลังซิงก์...";
+        const urlWithCacheBust = `${APPS_SCRIPT_URL}?t=${Date.now()}`;
+        const res = await fetch(urlWithCacheBust, { redirect: "follow" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
+
         if (json && Array.isArray(json.items) && json.items.length) {
           stockData = json.items;
-          document.getElementById("sourceLabel").textContent = "LIVE GOOGLE SHEETS";
+          const nowTime = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          badge.classList.remove("error");
+          badge.classList.add("connected");
+          label.textContent = `LIVE SHEETS (${json.items.length} คัน • ซิงก์ ${nowTime})`;
+
           if (json.updatedText) {
             document.getElementById("updateInfo").textContent = `${json.updatedText} • โชว์รูม MG M2`;
           }
           updateDashboard();
+        } else {
+          throw new Error("ไม่พบรายการ items ใน JSON");
         }
       } catch (err) {
-        console.warn("ใช้ข้อมูล Snapshot สำรอง:", err);
+        console.error("ซิงก์ข้อมูลสดไม่สำเร็จ:", err);
+        badge.classList.remove("connected");
+        badge.classList.add("error");
+        label.textContent = "ซิงก์ไม่สำเร็จ (ใช้ข้อมูลสำรอง)";
+        if (isManual) {
+          alert("ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ กรุณาตรวจสอบว่า Deploy Web App ตั้งค่า Who has access เป็น Anyone แล้วหรือยัง");
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🔄 ซิงก์ข้อมูลสด";
       }
     }
 
     document.getElementById("searchInput").addEventListener("input", updateDashboard);
     document.getElementById("zoneFilter").addEventListener("change", updateDashboard);
     document.getElementById("statusFilter").addEventListener("change", updateDashboard);
+    document.getElementById("syncNowBtn").addEventListener("click", () => loadFromAppsScriptIfConfigured(true));
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("searchInput").value = "";
       document.getElementById("zoneFilter").value = "ALL";
@@ -650,6 +714,7 @@
 
     updateDashboard();
     loadFromAppsScriptIfConfigured();
+    setInterval(() => loadFromAppsScriptIfConfigured(false), AUTO_SYNC_INTERVAL_MS);
   </script>
 </body>
 </html>
