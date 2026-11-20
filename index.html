@@ -178,7 +178,7 @@
     /* Controls */
     .controls {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr auto;
+      grid-template-columns: 2fr 1fr auto;
       gap: 12px;
       background: var(--bg-card);
       border: 1px solid rgba(148, 163, 184, 0.16);
@@ -368,7 +368,7 @@
       <div class="kpi-card">
         <div class="kpi-label">รถทั้งหมดในสต็อก (TOTAL)</div>
         <div class="kpi-value" id="kpiTotal">0</div>
-        <div class="kpi-sub" id="kpiZoneSplit">ตารางบน 0 | ตารางล่าง 0</div>
+        <div class="kpi-sub" id="kpiActiveSummary">รายการรถที่ใช้งานอยู่</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">ยังไม่มีจอง (AVAILABLE)</div>
@@ -395,11 +395,6 @@
     <!-- Filter Bar -->
     <section class="controls">
       <input type="text" id="searchInput" class="input" placeholder="ค้นหา VIN, รุ่นรถ, สี, ผู้ดูแล หรือหมายเหตุ..." />
-      <select id="zoneFilter" class="select">
-        <option value="ALL">ทุกตาราง (บน + ล่าง)</option>
-        <option value="TOP">ตารางบน (สต็อกเก่า 2022–2024)</option>
-        <option value="BOTTOM">ตารางล่าง (รับเข้า 2024–11/2026)</option>
-      </select>
       <select id="statusFilter" class="select">
         <option value="ALL">ทุกสถานะ</option>
         <option value="ยังไม่มีจอง">ยังไม่มีจอง</option>
@@ -431,7 +426,6 @@
         <table>
           <thead>
             <tr>
-              <th>กลุ่ม</th>
               <th>ลำดับ</th>
               <th>VIN</th>
               <th>รุ่น / ราคา</th>
@@ -451,47 +445,67 @@
 
   <script>
     const INITIAL_DATA = [
-      // ตารางบน (8 คัน)
-      { zone: "TOP", no: 1, vin: "MMLA36E46NG022812", model: "MG5(629,000)", trim: "D+", color: "Red", entryDate: "2022-05-31", days: 1634, status: "ยังไม่มีจอง", note: "คีย์2022 | ติดฟิลม์แล้ว" },
-      { zone: "TOP", no: 2, vin: "MMLA36E68NG042240", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-06-07", days: 1262, status: "ส่งมอบแล้ว", note: "คีย์2023 | ติดฟิลม์แล้ว" },
-      { zone: "TOP", no: 3, vin: "MMLA36E49NG034209", model: "MG5(629,000)", trim: "D+", color: "Yellow", entryDate: "2022-11-02", days: 1479, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
-      { zone: "TOP", no: 4, vin: "LSJWH4093PN273650", model: "MG4 ELECTRIC (969,000)", trim: "X", color: "Black", entryDate: "2024-02-02", days: 1022, status: "ยังไม่มีจอง", note: "คีย์2024 | ขาย 709,000 นำเข้า" },
-      { zone: "TOP", no: 5, vin: "MMLWH496XRG012362", model: "MG4 ELECTRIC(2024) (809,900)", trim: "X", color: "Grey/Black", entryDate: "2024-04-08", days: 956, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
-      { zone: "TOP", no: 6, vin: "MMLA36E60PG018923", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2024" },
-      { zone: "TOP", no: 7, vin: "MMLWH4968RG021755", model: "MG4 ELECTRIC (MY24) (809,900)", trim: "X", color: "Black", entryDate: "2024-08-31", days: 811, status: "ยังไม่มีจอง", note: "คีย์2024" },
-      { zone: "TOP", no: 8, vin: "MMLA36E42NG035301", model: "MG5 (629,000)", trim: "D+", color: "Red", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2025" },
-
-      // ตารางล่าง (23 คัน)
-      { zone: "BOTTOM", no: 1, vin: "MMLWP456XRG029042", model: "MG3 HYBRID+ (579,900) 499,000", trim: "D", color: "White", entryDate: "2024-11-22", days: 728, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 2, vin: "MMLW74E3XPG021963", model: "MG ZS (649,000) 549,000", trim: "X", color: "Black", entryDate: "2026-05-11", days: 193, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 3, vin: "MMLA36E48RG022459", model: "MG5 2024 (629,900) 579,900", trim: "D", color: "White", entryDate: "2026-06-13", days: 160, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 4, vin: "MMLWS4966TG019723", model: "MG S5 EV (759,900)", trim: "X+", color: "Grey", entryDate: "2026-07-21", days: 122, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 5, vin: "LSJWT4098TS037246", model: "MG IM5", trim: "LR", color: "Grey", entryDate: "2026-07-28", days: 115, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 6, vin: "MMLWS4963TG022451", model: "MG S5EV (849,900)", trim: "V+", color: "White", entryDate: "2026-09-03", days: 78, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 7, vin: "MMLEB494XTG023283", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-09-03", days: 78, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { zone: "BOTTOM", no: 8, vin: "MMLEB49AXTG025377", model: "MG URBAN (729,900)", trim: "ULTRA", color: "Grey", entryDate: "2026-09-09", days: 72, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 9, vin: "MMLWS4962TG022781", model: "MG S5EV (759,900)", trim: "X+", color: "Black", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 10, vin: "MMLWS4960TG025002", model: "MG S5EV (649,900)", trim: "D+", color: "TITANIUM", entryDate: "2026-10-06", days: 45, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ปูนิ่ม" },
-      { zone: "BOTTOM", no: 11, vin: "MMLWS4960TG027333", model: "MG S5EV (649,900)", trim: "D+", color: "White", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 12, vin: "MMLEB49A6TG030950", model: "MG URBAN (619,900)", trim: "MAX", color: "Grey", entryDate: "2026-10-22", days: 29, status: "ส่งมอบแล้ว", note: "นัดส่ง 15-11-69 | พี่เบิร์ท | ตัดขายแล้ว" },
-      { zone: "BOTTOM", no: 13, vin: "MMLWH4967TG024878", model: "MG4 ELECTRIC (709,900)", trim: "X", color: "Black", entryDate: "2026-10-23", days: 28, status: "ยังไม่มีจอง", note: "Display" },
-      { zone: "BOTTOM", no: 14, vin: "MMLEB49A4TG025892", model: "MG URBAN (619,900)", trim: "MAX", color: "PURPLE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 15, vin: "MMLEB49A7TG030035", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 16, vin: "MMLEB49A9TG030070", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 17, vin: "MMLEB49A8TG029959", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
-      { zone: "BOTTOM", no: 18, vin: "LSJWT4094TS038295", model: "MG IM5", trim: "LR", color: "BEIGE", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { zone: "BOTTOM", no: 19, vin: "MMLEB4948TG029499", model: "MG URBAN (549,900)", trim: "STANDARD", color: "GREY", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "ดรีม" },
-      { zone: "BOTTOM", no: 20, vin: "MMLEB4943TG029376", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
-      { zone: "BOTTOM", no: 21, vin: "MMLEB49A3TG033403", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
-      { zone: "BOTTOM", no: 22, vin: "MMLEB49A2TG034803", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
-      { zone: "BOTTOM", no: 23, vin: "เคส EPDI รอรับเข้า", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ยังไม่มีจอง", note: "Display" }
+      { no: 1, vin: "MMLA36E46NG022812", model: "MG5(629,000)", trim: "D+", color: "Red", entryDate: "2022-05-31", days: 1634, status: "ยังไม่มีจอง", note: "คีย์2022 | ติดฟิลม์แล้ว" },
+      { no: 2, vin: "MMLA36E68NG042240", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-06-07", days: 1262, status: "ส่งมอบแล้ว", note: "คีย์2023 | ติดฟิลม์แล้ว" },
+      { no: 3, vin: "MMLA36E49NG034209", model: "MG5(629,000)", trim: "D+", color: "Yellow", entryDate: "2022-11-02", days: 1479, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
+      { no: 4, vin: "LSJWH4093PN273650", model: "MG4 ELECTRIC (969,000)", trim: "X", color: "Black", entryDate: "2024-02-02", days: 1022, status: "ยังไม่มีจอง", note: "คีย์2024 | ขาย 709,000 นำเข้า" },
+      { no: 5, vin: "MMLWH496XRG012362", model: "MG4 ELECTRIC(2024) (809,900)", trim: "X", color: "Grey/Black", entryDate: "2024-04-08", days: 956, status: "ยังไม่มีจอง", note: "คีย์2024 | Display" },
+      { no: 6, vin: "MMLA36E60PG018923", model: "MG5(639,000)", trim: "X", color: "Black", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2024" },
+      { no: 7, vin: "MMLWH4968RG021755", model: "MG4 ELECTRIC (MY24) (809,900)", trim: "X", color: "Black", entryDate: "2024-08-31", days: 811, status: "ยังไม่มีจอง", note: "คีย์2024" },
+      { no: 8, vin: "MMLA36E42NG035301", model: "MG5 (629,000)", trim: "D+", color: "Red", entryDate: "2023-07-04", days: 1235, status: "ยังไม่มีจอง", note: "คีย์2025" },
+      { no: 9, vin: "MMLWP456XRG029042", model: "MG3 HYBRID+ (579,900) 499,000", trim: "D", color: "White", entryDate: "2024-11-22", days: 728, status: "ยังไม่มีจอง", note: "-" },
+      { no: 10, vin: "MMLW74E3XPG021963", model: "MG ZS (649,000) 549,000", trim: "X", color: "Black", entryDate: "2026-05-11", days: 193, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 11, vin: "MMLA36E48RG022459", model: "MG5 2024 (629,900) 579,900", trim: "D", color: "White", entryDate: "2026-06-13", days: 160, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 12, vin: "MMLWS4966TG019723", model: "MG S5 EV (759,900)", trim: "X+", color: "Grey", entryDate: "2026-07-21", days: 122, status: "ยังไม่มีจอง", note: "-" },
+      { no: 13, vin: "LSJWT4098TS037246", model: "MG IM5", trim: "LR", color: "Grey", entryDate: "2026-07-28", days: 115, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 14, vin: "MMLWS4963TG022451", model: "MG S5EV (849,900)", trim: "V+", color: "White", entryDate: "2026-09-03", days: 78, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 15, vin: "MMLEB494XTG023283", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-09-03", days: 78, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { no: 16, vin: "MMLEB49AXTG025377", model: "MG URBAN (729,900)", trim: "ULTRA", color: "Grey", entryDate: "2026-09-09", days: 72, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 17, vin: "MMLWS4962TG022781", model: "MG S5EV (759,900)", trim: "X+", color: "Black", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
+      { no: 18, vin: "MMLWS4960TG025002", model: "MG S5EV (649,900)", trim: "D+", color: "TITANIUM", entryDate: "2026-10-06", days: 45, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ปูนิ่ม" },
+      { no: 19, vin: "MMLWS4960TG027333", model: "MG S5EV (649,900)", trim: "D+", color: "White", entryDate: "2026-10-06", days: 45, status: "ยังไม่มีจอง", note: "-" },
+      { no: 20, vin: "MMLEB49A6TG030950", model: "MG URBAN (619,900)", trim: "MAX", color: "Grey", entryDate: "2026-10-22", days: 29, status: "ส่งมอบแล้ว", note: "นัดส่ง 15-11-69 | พี่เบิร์ท | ตัดขายแล้ว" },
+      { no: 21, vin: "MMLWH4967TG024878", model: "MG4 ELECTRIC (709,900)", trim: "X", color: "Black", entryDate: "2026-10-23", days: 28, status: "ยังไม่มีจอง", note: "Display" },
+      { no: 22, vin: "MMLEB49A4TG025892", model: "MG URBAN (619,900)", trim: "MAX", color: "PURPLE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
+      { no: 23, vin: "MMLEB49A7TG030035", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-03", days: 17, status: "ยังไม่มีจอง", note: "-" },
+      { no: 24, vin: "MMLEB49A9TG030070", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
+      { no: 25, vin: "MMLEB49A8TG029959", model: "MG URBAN (619,900)", trim: "MAX", color: "BEIGE", entryDate: "2026-11-07", days: 13, status: "ยังไม่มีจอง", note: "-" },
+      { no: 26, vin: "LSJWT4094TS038295", model: "MG IM5", trim: "LR", color: "BEIGE", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { no: 27, vin: "MMLEB4948TG029499", model: "MG URBAN (549,900)", trim: "STANDARD", color: "GREY", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "ดรีม" },
+      { no: 28, vin: "MMLEB4943TG029376", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "เอิร์ท" },
+      { no: 29, vin: "MMLEB49A3TG033403", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
+      { no: 30, vin: "MMLEB49A2TG034803", model: "MG URBAN (619,900)", trim: "MAX", color: "White", entryDate: "2026-11-18", days: 2, status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ", note: "พี่ต้อม" },
+      { no: 31, vin: "เคส EPDI รอรับเข้า", model: "MG URBAN (549,900)", trim: "STANDARD", color: "White", entryDate: "2026-11-18", days: 2, status: "ยังไม่มีจอง", note: "Display" }
     ];
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4XHDNIl_B0ozGmwGe4SbuZ6l8I_xM1wZTpVi3RzbHDHgXl8WXr8Kd1zaBlzfNYEH1ig/exec";
-    const AUTO_SYNC_INTERVAL_MS = 60000; // ดึงข้อมูลสดอัตโนมัติทุก 60 วินาที
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN9Ii_RczxUVCtWT-6DNaEav-md9TTrvrobz8Agea_c3lvCOfNGsMOA-AZMRixQTClPA/exec";
+    const AUTO_SYNC_INTERVAL_MS = 60000;
+    const HIDE_ZERO_DAYS = true; // ซ่อนรายการที่มีจำนวนวันเป็น 0
 
     let stockData = [...INITIAL_DATA];
     let statusChart, modelChart;
+
+    function sanitizeStockItems(items) {
+      return items
+        .map((r, idx) => ({
+          ...r,
+          no: idx + 1,
+          vin: String(r.vin || "").trim(),
+          model: String(r.model || "").trim(),
+          trim: String(r.trim || "").trim(),
+          color: String(r.color || "").trim(),
+          entryDate: String(r.entryDate || "").trim(),
+          days: Number(r.days) || 0,
+          status: String(r.status || "ยังไม่มีจอง").trim(),
+          note: String(r.note || "-").trim()
+        }))
+        .filter(r => {
+          if (!r.vin && !r.model) return false;
+          if (HIDE_ZERO_DAYS && r.days <= 0) return false;
+          return true;
+        })
+        .map((r, idx) => ({ ...r, no: idx + 1 }));
+    }
 
     function normalizeModelGroup(modelStr = "") {
       const m = modelStr.toUpperCase();
@@ -523,22 +537,17 @@
 
     function getFilteredData() {
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
-      const zone = document.getElementById("zoneFilter").value;
       const status = document.getElementById("statusFilter").value;
 
       return stockData.filter(item => {
-        const matchZone = zone === "ALL" || item.zone === zone;
         const matchStatus = status === "ALL" || item.status === status;
         const hay = `${item.vin} ${item.model} ${item.trim} ${item.color} ${item.note} ${item.status}`.toLowerCase();
         const matchQ = !q || hay.includes(q);
-        return matchZone && matchStatus && matchQ;
+        return matchStatus && matchQ;
       });
     }
 
     function renderKPIs(rows) {
-      const topCount = stockData.filter(r => r.zone === "TOP").length;
-      const bottomCount = stockData.filter(r => r.zone === "BOTTOM").length;
-
       const available = rows.filter(r => r.status === "ยังไม่มีจอง").length;
       const waiting = rows.filter(r => r.status.includes("รอส่งมอบ") || r.status.includes("อนุมัติ")).length;
       const delivered = rows.filter(r => r.status.includes("ส่งมอบแล้ว")).length;
@@ -548,7 +557,7 @@
       const maxDays = daysArr.length ? Math.max(...daysArr) : 0;
 
       document.getElementById("kpiTotal").textContent = rows.length;
-      document.getElementById("kpiZoneSplit").textContent = `ทั้งหมด: ตารางบน ${topCount} | ตารางล่าง ${bottomCount}`;
+      document.getElementById("kpiActiveSummary").textContent = `จากทั้งหมด ${stockData.length} คันในระบบ`;
       document.getElementById("kpiAvailable").textContent = available;
       document.getElementById("kpiWaiting").textContent = waiting;
       document.getElementById("kpiDelivered").textContent = delivered;
@@ -561,16 +570,15 @@
       document.getElementById("rowCountLabel").textContent = `แสดง ${rows.length} คัน`;
 
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:24px; color:#94a3b8;">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:24px; color:#94a3b8;">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`;
         return;
       }
 
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td>${r.zone === "TOP" ? '<span class="pill" style="background:rgba(168,85,247,0.16);color:#e9d5ff;border:1px solid rgba(168,85,247,0.4);">ตารางบน</span>' : '<span class="pill" style="background:rgba(59,130,246,0.16);color:#93c5fd;border:1px solid rgba(59,130,246,0.4);">ตารางล่าง</span>'}</td>
           <td>${r.no}</td>
-          <td class="vin-code">${r.vin}</td>
-          <td><strong>${r.model}</strong></td>
+          <td class="vin-code">${r.vin || "-"}</td>
+          <td><strong>${r.model || "-"}</strong></td>
           <td>${r.trim || "-"}</td>
           <td>${r.color || "-"}</td>
           <td>${r.entryDate || "-"}</td>
@@ -661,7 +669,7 @@
       const btn = document.getElementById("syncNowBtn");
 
       if (!APPS_SCRIPT_URL) {
-        label.textContent = "STATIC SNAPSHOT (31 UNITS)";
+        label.textContent = `STATIC SNAPSHOT (${stockData.length} UNITS)`;
         return;
       }
 
@@ -674,11 +682,11 @@
         const json = await res.json();
 
         if (json && Array.isArray(json.items) && json.items.length) {
-          stockData = json.items;
+          stockData = sanitizeStockItems(json.items);
           const nowTime = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
           badge.classList.remove("error");
           badge.classList.add("connected");
-          label.textContent = `LIVE SHEETS (${json.items.length} คัน • ซิงก์ ${nowTime})`;
+          label.textContent = `LIVE SHEETS (${stockData.length} คัน • ซิงก์ ${nowTime})`;
 
           if (json.updatedText) {
             document.getElementById("updateInfo").textContent = `${json.updatedText} • โชว์รูม MG M2`;
@@ -693,7 +701,7 @@
         badge.classList.add("error");
         label.textContent = "ซิงก์ไม่สำเร็จ (ใช้ข้อมูลสำรอง)";
         if (isManual) {
-          alert("ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ กรุณาตรวจสอบว่า Deploy Web App ตั้งค่า Who has access เป็น Anyone แล้วหรือยัง");
+          alert("ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ กรุณาตรวจสอบสิทธิ์การเข้าถึง Web App");
         }
       } finally {
         btn.disabled = false;
@@ -702,16 +710,15 @@
     }
 
     document.getElementById("searchInput").addEventListener("input", updateDashboard);
-    document.getElementById("zoneFilter").addEventListener("change", updateDashboard);
     document.getElementById("statusFilter").addEventListener("change", updateDashboard);
     document.getElementById("syncNowBtn").addEventListener("click", () => loadFromAppsScriptIfConfigured(true));
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("searchInput").value = "";
-      document.getElementById("zoneFilter").value = "ALL";
       document.getElementById("statusFilter").value = "ALL";
       updateDashboard();
     });
 
+    stockData = sanitizeStockItems(INITIAL_DATA);
     updateDashboard();
     loadFromAppsScriptIfConfigured();
     setInterval(() => loadFromAppsScriptIfConfigured(false), AUTO_SYNC_INTERVAL_MS);
